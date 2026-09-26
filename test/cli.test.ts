@@ -258,6 +258,87 @@ describe("--name override", () => {
   });
 });
 
+describe("--step anchor", () => {
+  test("places the base color verbatim at the specified step", () => {
+    const { output, exitCode } = main(["#111410", "--step", "700"]);
+    expect(exitCode).toBe(0);
+
+    const emitted = stepsOf(output).find((s) => s.step === 700)!;
+    const input = toOklch(parse("#111410")!);
+
+    expect(Math.abs(emitted.l - input.l)).toBeLessThan(0.001);
+    expect(Math.abs(emitted.c - (input.c ?? 0))).toBeLessThan(0.001);
+    expect(Math.abs(emitted.h - (input.h ?? 0))).toBeLessThan(0.001);
+  });
+
+  test("hex format round-trips the base color at the specified step", () => {
+    const { output, exitCode } = main(["#111410", "--step", "700", "--format", "hex"]);
+    expect(exitCode).toBe(0);
+    expect(output).toContain("700: #111410;");
+  });
+
+  test("lightness is strictly monotonic across all 11 steps for arbitrary anchors", () => {
+    for (const [color, step] of [
+      ["#e0f2fe", "50"],
+      ["#111410", "700"],
+      ["#020617", "950"],
+    ] as const) {
+      const { output, exitCode } = main([color, "--step", step]);
+      expect(exitCode).toBe(0);
+
+      const steps = stepsOf(output);
+      expect(steps.length).toBe(11);
+      for (let i = 1; i < steps.length; i++) {
+        expect(steps[i]!.l).toBeLessThan(steps[i - 1]!.l);
+      }
+      expect(new Set(steps.map((s) => `${s.l} ${s.c} ${s.h}`)).size).toBe(11);
+      for (const s of steps) {
+        expect(displayable({ mode: "oklch", ...s })).toBe(true);
+      }
+    }
+  });
+
+  test("missing, non-integer, or out-of-range step exits non-zero", () => {
+    expect(main(["#ff0000", "--step"]).exitCode).toBe(1);
+    expect(main(["#ff0000", "--step", "foo"]).exitCode).toBe(1);
+    expect(main(["#ff0000", "--step", "550"]).exitCode).toBe(1);
+    expect(main(["#ff0000", "--step", "1000"]).exitCode).toBe(1);
+  });
+
+  test("colors outside valid lightness bounds for anchor exit non-zero", () => {
+    const light = main(["#ffffff", "--step", "700"]);
+    expect(light.exitCode).toBe(1);
+    expect(light.output).toContain("too light");
+
+    const dark = main(["#000000", "--step", "50"]);
+    expect(dark.exitCode).toBe(1);
+    expect(dark.output).toContain("too dark");
+  });
+
+  test("--step composes with --name, --v3, --format, and --preview", () => {
+    const { output, exitCode } = main([
+      "#111410",
+      "--step",
+      "700",
+      "--name",
+      "brand",
+      "--v3",
+      "--format",
+      "hex",
+      "--preview",
+    ]);
+    expect(exitCode).toBe(0);
+    expect(output).toContain("brand:");
+    expect(output).toContain('700: "#111410",');
+    expect(output).toContain(`${String.fromCharCode(27)}[48;2;`);
+  });
+
+  test("usage documents --step", () => {
+    const { output } = main([]);
+    expect(output).toContain("--step");
+  });
+});
+
 describe("v3 export", () => {
   test("--v3 emits a valid config snippet nesting the palette under theme.extend.colors", () => {
     const { output, exitCode } = main(["#ff0000", "--v3"]);

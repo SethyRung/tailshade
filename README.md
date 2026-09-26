@@ -16,9 +16,9 @@ $ tailshade '#ff0000'
 }
 ```
 
-Your base color lands verbatim at `<name>-500`, and the ramp reads like one of
-Tailwind's own: lightness targets and chroma taper derived from v4's real
-palettes, every step gamut-mapped to sRGB.
+Your base color lands verbatim at `<name>-500` (or your chosen `--step`),
+and the ramp reads like one of Tailwind's own: lightness targets and chroma
+taper derived from v4's real palettes, every step gamut-mapped to sRGB.
 
 ## Install
 
@@ -51,6 +51,7 @@ The base color accepts any CSS format — hex, `rgb()`, `hsl()`, named colors, o
 | Flag                              | Effect                                                              |
 | --------------------------------- | ------------------------------------------------------------------- |
 | _(none)_                          | Tailwind v4 `@theme` block, oklch values (default)                  |
+| `--step <50..950>`                | Anchor base color to a specific shade (default: 500)                |
 | `--name <name>`                   | Override the auto-detected palette name                             |
 | `--v3`                            | Export a `tailwind.config.js` snippet instead of the `@theme` block |
 | `--format <oklch\|hex\|rgb\|hsl>` | Color notation of the emitted values (default: oklch)               |
@@ -60,6 +61,7 @@ The base color accepts any CSS format — hex, `rgb()`, `hsl()`, named colors, o
 Examples:
 
 ```bash
+tailshade '#111410' --step 700
 tailshade 'oklch(0.6 0.1 29)' --name brand
 tailshade '#ff0000' --v3 --format hex
 tailshade 'teal' --preview
@@ -94,11 +96,12 @@ module.exports = {
 ## How it works
 
 - Parse any CSS color (via [culori](https://culorijs.org/)) and normalize to OKLCH.
-- Anchor the base color verbatim at step 500; scale a v4-derived lightness
-  ladder around it — natural spacing near the archetypal base, stretched or
-  compressed for extreme bases, never two identical steps.
+- Anchor the base color verbatim at step 500 (or the step given by `--step`);
+  scale a v4-derived lightness ladder around it — natural spacing near the
+  archetypal base, stretched or compressed for extreme bases, never two identical
+  steps.
 - Apply a v4-derived chroma taper (peak at 500, whisper at 50, moderate at 950),
-  then gamut-map every step so nothing clips.
+  scaled relative to the anchor step, then gamut-map every step so nothing clips.
 
 Decisions are recorded in [docs/adr](docs/adr); the domain vocabulary lives in
 [CONTEXT.md](CONTEXT.md).

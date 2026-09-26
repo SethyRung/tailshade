@@ -1,4 +1,4 @@
-import { generatePalette, PaletteError } from "@/core";
+import { generatePalette, PaletteError, STEPS, type Step } from "@/core";
 import { toPreviewStrip, toTailwindV3, toThemeCss, type Notation } from "@/format";
 import { kebabCase } from "@/name";
 
@@ -6,18 +6,20 @@ const NOTATIONS: Notation[] = ["oklch", "hex", "rgb", "hsl"];
 
 export type CliResult = { output: string; exitCode: number };
 
-const USAGE = `Usage: tailshade '<color>' [--name <name>] [--v3] [--format <oklch|hex|rgb|hsl>] [--preview]
+const USAGE = `Usage: tailshade '<color>' [--step <50..950>] [--name <name>] [--v3] [--format <oklch|hex|rgb|hsl>] [--preview]
 
 Generate a Tailwind v4 palette from a base color (any CSS color format).
 
-The palette name defaults to the nearest CSS color name, which can shadow
-Tailwind's built-in colors (red, teal, ...) inside @theme — pass --name to
-choose your own. Pass --v3 to export a tailwind.config.js snippet instead of
-the v4 @theme block. Values default to oklch; pass --format to switch the
-notation (hex, rgb, hsl). Pass --preview to print an ANSI swatch strip above
-the output.
+The base color anchors at step 500 by default — pass --step to anchor at any
+shade (50, 100, 200, ..., 950). The palette name defaults to the nearest CSS
+color name, which can shadow Tailwind's built-in colors (red, teal, ...) inside
+@theme — pass --name to choose your own. Pass --v3 to export a tailwind.config.js
+snippet instead of the v4 @theme block. Values default to oklch; pass --format
+to switch the notation (hex, rgb, hsl). Pass --preview to print an ANSI swatch
+strip above the output.
 
 Example: tailshade '#ff0000'
+         tailshade '#111410' --step 700
          tailshade '#ff0000' --name brand
          tailshade '#ff0000' --v3 --format hex --preview`;
 
@@ -28,6 +30,7 @@ Example: tailshade '#ff0000'
 export function main(argv: string[]): CliResult {
   let color: string | undefined;
   let name: string | undefined;
+  let step: Step = 500;
   let v3 = false;
   let preview = false;
   let notation: Notation | undefined;
@@ -36,6 +39,18 @@ export function main(argv: string[]): CliResult {
     const arg = argv[i]!;
     if (arg === "--help" || arg === "-h") {
       return { output: USAGE, exitCode: 0 };
+    }
+    if (arg === "--step") {
+      const value = argv[++i];
+      if (value === undefined || value.startsWith("--")) {
+        return usage("--step requires a value");
+      }
+      const num = Number(value);
+      if (!Number.isInteger(num) || !STEPS.includes(num as Step)) {
+        return usage(`--step '${value}' expects one of: ${STEPS.join(", ")}`);
+      }
+      step = num as Step;
+      continue;
     }
     if (arg === "--name") {
       const value = argv[++i];
@@ -77,7 +92,7 @@ export function main(argv: string[]): CliResult {
   }
 
   try {
-    const palette = generatePalette(color);
+    const palette = generatePalette(color, step);
     if (name !== undefined) {
       const kebab = kebabCase(name);
       if (!kebab) {

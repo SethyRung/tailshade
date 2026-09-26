@@ -20,9 +20,23 @@ export const TARGETS: Record<number, number> = {
 export const L_MAX = 0.985;
 export const L_MIN = 0.02;
 
-/** Bases beyond this cannot fit 4 distinct steps above/below. */
+/** Bases beyond this cannot fit distinct steps above/below. */
 export const L_TOO_LIGHT = 0.97;
 export const L_TOO_DARK = 0.03;
+
+export const LIGHTNESS_BOUNDS: Record<number, { min: number; max: number }> = {
+  50: { min: 0.04, max: 0.985 },
+  100: { min: 0.035, max: 0.98 },
+  200: { min: 0.03, max: 0.98 },
+  300: { min: 0.03, max: 0.975 },
+  400: { min: 0.03, max: 0.97 },
+  500: { min: 0.03, max: 0.97 },
+  600: { min: 0.03, max: 0.97 },
+  700: { min: 0.025, max: 0.97 },
+  800: { min: 0.025, max: 0.97 },
+  900: { min: 0.025, max: 0.965 },
+  950: { min: 0.02, max: 0.96 },
+};
 
 /**
  * Chroma taper ratios per step (C_step / C_500): mean ratio across the 17

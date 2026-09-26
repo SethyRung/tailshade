@@ -19,7 +19,8 @@ exactly, in code, docs, and conversation.
 - **Lightness target** — the planned OKLCH L for a step, before chroma and
   gamut adjustments (see ADR-0003).
 - **Base anchoring** — the rule that the Base color appears verbatim at step
-  500; other steps' Lightness targets are scaled around it (see ADR-0005).
+  500 (or the step chosen via `--step`); other steps' Lightness targets are
+  scaled around it (see ADR-0005, ADR-0014).
 - **Taper** — the chroma reduction profile toward step 50 (aggressive) and
   step 950 (gentle) (see ADR-0006).
 - **Nearest name** — the CSS named color closest to the Base color; the
