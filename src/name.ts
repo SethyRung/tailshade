@@ -24,11 +24,19 @@ function normalize(color: { l?: number; c?: number; h?: number }): Oklch {
   };
 }
 
+/** Kebab-case: lowercase; anything not [a-z0-9] collapses to a single dash. */
+export function kebabCase(input: string): string {
+  return input
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
 /** Closest CSS named color to the given color in OKLCH space, kebab-cased. */
 export function detectName(color: Oklch): string {
   const [hit] = findNearest({ mode: "oklch", ...color });
   if (!hit) {
     throw new Error("no named colors available");
   }
-  return hit.name.replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  return kebabCase(hit.name);
 }

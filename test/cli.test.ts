@@ -221,3 +221,39 @@ describe("chroma taper", () => {
     }
   });
 });
+
+describe("--name override", () => {
+  test("--name replaces the auto-detected name", () => {
+    const { output, exitCode } = main(["#ff0000", "--name", "brand"]);
+
+    expect(exitCode).toBe(0);
+    expect(output).toContain("--color-brand-500:");
+    expect(output).not.toContain("--color-red-");
+  });
+
+  test("--name values are kebab-cased", () => {
+    const { output, exitCode } = main(["#ff0000", "--name", "My Brand Color!"]);
+
+    expect(exitCode).toBe(0);
+    expect(output).toContain("--color-my-brand-color-500:");
+  });
+
+  test("without the flag, nearest-name detection is unchanged", () => {
+    const { output } = main(["#ff0000"]);
+
+    expect(output).toContain("--color-red-500:");
+    expect(output).not.toContain("--color-brand-");
+  });
+
+  test("--name with a missing or unusable value exits non-zero", () => {
+    expect(main(["#ff0000", "--name"]).exitCode).toBe(1);
+    expect(main(["#ff0000", "--name", "###"]).exitCode).toBe(1);
+  });
+
+  test("usage documents the shadowing footgun and the --name escape hatch", () => {
+    const { output } = main([]);
+
+    expect(output).toContain("--name");
+    expect(output).toContain("shadow");
+  });
+});
