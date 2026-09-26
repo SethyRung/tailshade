@@ -34,6 +34,9 @@ export function main(argv: string[]): CliResult {
 
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]!;
+    if (arg === "--help" || arg === "-h") {
+      return { output: USAGE, exitCode: 0 };
+    }
     if (arg === "--name") {
       const value = argv[++i];
       if (value === undefined || value.startsWith("--")) {

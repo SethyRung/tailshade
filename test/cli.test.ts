@@ -403,3 +403,26 @@ describe("--preview swatch strip", () => {
     expect(output).toContain("--preview");
   });
 });
+
+describe("--help", () => {
+  test("--help and -h print usage and exit zero", () => {
+    for (const flag of ["--help", "-h"]) {
+      const { output, exitCode } = main([flag]);
+      expect(exitCode).toBe(0);
+      expect(output).toContain("Usage:");
+      expect(output).toContain("Example: tailshade '#ff0000'");
+    }
+  });
+
+  test("--help wins over other arguments", () => {
+    const { output, exitCode } = main(["#ff0000", "--help"]);
+
+    expect(exitCode).toBe(0);
+    expect(output).toContain("Usage:");
+    expect(output).not.toContain("--color-");
+  });
+
+  test("a missing color still exits non-zero (distinct from --help)", () => {
+    expect(main([]).exitCode).toBe(1);
+  });
+});
