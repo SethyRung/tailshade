@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { converter, displayable, parse } from "culori";
+import { converter, differenceEuclidean, displayable, parse } from "culori";
 import { main } from "@/cli";
 
 const toOklch = converter("oklch");
@@ -255,5 +255,101 @@ describe("--name override", () => {
 
     expect(output).toContain("--name");
     expect(output).toContain("shadow");
+  });
+});
+
+describe("v3 export", () => {
+  test("--v3 emits a valid config snippet nesting the palette under theme.extend.colors", () => {
+    const { output, exitCode } = main(["#ff0000", "--v3"]);
+
+    expect(exitCode).toBe(0);
+    expect(output).toContain("module.exports = {");
+    expect(output).toContain("theme:");
+    expect(output).toContain("extend:");
+    expect(output).toContain("colors:");
+    expect(output).toContain("red:");
+    expect(() => new Bun.Transpiler({ loader: "js" }).transformSync(output)).not.toThrow();
+  });
+
+  test("the v3 export carries the same oklch values as the v4 output, shades in order", () => {
+    const v3 = main(["#ff0000", "--v3"]).output;
+    const v4 = main(["#ff0000"]).output;
+
+    for (const s of stepsOf(v4)) {
+      const f = (n: number) => n.toFixed(3);
+      const re = new RegExp(`${s.step}: "oklch\\(${f(s.l)} ${f(s.c)} ${f(s.h)}\\)"`);
+      expect(v3).toMatch(re);
+    }
+  });
+
+  test("--name composes with --v3", () => {
+    const { output } = main(["#ff0000", "--v3", "--name", "brand"]);
+
+    expect(output).toContain("brand:");
+    expect(output).not.toContain("red:");
+  });
+
+  test("v3 output is pipe-clean", () => {
+    const ESC = String.fromCharCode(27);
+    expect(main(["#ff0000", "--v3"]).output).not.toContain(`${ESC}[`);
+  });
+
+  test("--json and --ts are rejected as unknown flags", () => {
+    expect(main(["#ff0000", "--json"]).exitCode).toBe(1);
+    expect(main(["#ff0000", "--ts"]).exitCode).toBe(1);
+  });
+});
+
+describe("--format notation", () => {
+  test("--format hex changes values in both output modes", () => {
+    const v4 = main(["#ff0000", "--format", "hex"]).output;
+
+    expect(v4).toMatch(/--color-red-500: #[0-9a-f]{6};/);
+    expect(v4).not.toContain("oklch(");
+
+    const v3 = main(["#ff0000", "--v3", "--format", "hex"]).output;
+    expect(v3).toMatch(/500: "#[0-9a-f]{6}",/);
+    expect(v3).not.toContain("oklch(");
+  });
+
+  test("--format rgb and --format hsl change values likewise", () => {
+    const rgb = main(["#ff0000", "--format", "rgb"]).output;
+    expect(rgb).toMatch(/--color-red-500: rgb\(\d+, \d+, \d+\);/);
+
+    const hsl = main(["#ff0000", "--format", "hsl"]).output;
+    expect(hsl).toMatch(/--color-red-500: hsl\([\d.]+, \d+(\.\d+)?%, \d+(\.\d+)?%\);/);
+  });
+
+  test("every notation round-trips the 500 step to the Base color", () => {
+    const base = parse("#ff0000")!;
+
+    for (const scheme of ["hex", "rgb", "hsl"] as const) {
+      const output = main(["#ff0000", "--format", scheme]).output;
+      const m = output.match(/--color-red-500: (.+);/);
+      const parsed = parse(m![1]!);
+      const distance = differenceEuclidean("rgb")(base, parsed!);
+      expect(distance).toBeLessThan(0.02);
+    }
+  });
+
+  test("--format with a missing or unknown scheme exits non-zero", () => {
+    expect(main(["#ff0000", "--format"]).exitCode).toBe(1);
+    const bad = main(["#ff0000", "--format", "cmyk"]);
+    expect(bad.exitCode).toBe(1);
+    expect(bad.output).toContain("cmyk");
+  });
+
+  test("--format composes with --name and --v3", () => {
+    const { output } = main(["#ff0000", "--v3", "--format", "hex", "--name", "brand"]);
+
+    expect(output).toContain("brand:");
+    expect(output).toMatch(/500: "#[0-9a-f]{6}",/);
+  });
+
+  test("usage documents --format and its schemes", () => {
+    const { output } = main([]);
+
+    expect(output).toContain("--format");
+    expect(output).toContain("hex");
   });
 });

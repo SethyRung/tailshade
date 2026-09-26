@@ -1,19 +1,24 @@
 import { generatePalette, PaletteError } from "@/core";
-import { toThemeCss } from "@/format";
+import { toTailwindV3, toThemeCss, type Notation } from "@/format";
 import { kebabCase } from "@/name";
+
+const NOTATIONS: Notation[] = ["oklch", "hex", "rgb", "hsl"];
 
 export type CliResult = { output: string; exitCode: number };
 
-const USAGE = `Usage: tailshade '<color>' [--name <name>]
+const USAGE = `Usage: tailshade '<color>' [--name <name>] [--v3] [--format <oklch|hex|rgb|hsl>]
 
 Generate a Tailwind v4 palette from a base color (any CSS color format).
 
 The palette name defaults to the nearest CSS color name, which can shadow
 Tailwind's built-in colors (red, teal, ...) inside @theme — pass --name to
-choose your own.
+choose your own. Pass --v3 to export a tailwind.config.js snippet instead of
+the v4 @theme block. Values default to oklch; pass --format to switch the
+notation (hex, rgb, hsl).
 
 Example: tailshade '#ff0000'
-         tailshade '#ff0000' --name brand`;
+         tailshade '#ff0000' --name brand
+         tailshade '#ff0000' --v3 --format hex`;
 
 /**
  * CLI entry and the single test seam: pure — takes an argv array, returns
@@ -22,6 +27,8 @@ Example: tailshade '#ff0000'
 export function main(argv: string[]): CliResult {
   let color: string | undefined;
   let name: string | undefined;
+  let v3 = false;
+  let notation: Notation | undefined;
 
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]!;
@@ -31,6 +38,21 @@ export function main(argv: string[]): CliResult {
         return usage("--name requires a value");
       }
       name = value;
+      continue;
+    }
+    if (arg === "--format") {
+      const value = argv[++i];
+      if (value === undefined) {
+        return usage("--format requires a value");
+      }
+      if (!NOTATIONS.includes(value as Notation)) {
+        return usage(`--format '${value}' expects one of: ${NOTATIONS.join(", ")}`);
+      }
+      notation = value as Notation;
+      continue;
+    }
+    if (arg === "--v3") {
+      v3 = true;
       continue;
     }
     if (arg.startsWith("--")) {
@@ -54,7 +76,9 @@ export function main(argv: string[]): CliResult {
       }
       palette.name = kebab;
     }
-    return { output: toThemeCss(palette), exitCode: 0 };
+    const fmt = notation ?? "oklch";
+    const output = v3 ? toTailwindV3(palette, fmt) : toThemeCss(palette, fmt);
+    return { output, exitCode: 0 };
   } catch (error) {
     if (error instanceof PaletteError) {
       return usage(error.message);
