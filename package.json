@@ -13,6 +13,9 @@
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check"
   },
+  "dependencies": {
+    "culori": "^4.0.2"
+  },
   "devDependencies": {
     "@types/bun": "latest",
     "oxfmt": "^0.70.0",
