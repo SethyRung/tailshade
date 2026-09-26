@@ -151,3 +151,73 @@ describe("tailshade CLI seam", () => {
     }
   });
 });
+
+describe("chroma taper", () => {
+  test("emitted chroma follows the v4-derived taper ratios for a moderate base", () => {
+    // Base chroma 0.1 stays under the gamut limit at every step lightness for
+    // this hue, so the emitted chroma exposes the taper curve directly.
+    // Expected values: floor3(0.1 * v4 ratio) per step.
+    const { output, exitCode } = main(["oklch(0.6 0.1 29)"]);
+    expect(exitCode).toBe(0);
+
+    const chroma = new Map(stepsOf(output).map((s) => [s.step, s.c]));
+    const expected: Record<number, number> = {
+      50: 0.008,
+      100: 0.02,
+      200: 0.039,
+      300: 0.065,
+      400: 0.09,
+      500: 0.1,
+      600: 0.098,
+      700: 0.086,
+      800: 0.07,
+      900: 0.056,
+      950: 0.04,
+    };
+    for (const [step, c] of Object.entries(expected)) {
+      expect(chroma.get(Number(step))).toBe(c);
+    }
+  });
+
+  test("v4's own red-500 approximates v4's red ramp within tolerance", () => {
+    const { output, exitCode } = main(["oklch(0.637 0.237 25.331)"]);
+    expect(exitCode).toBe(0);
+
+    // Tailwind v4's hand-tuned red ramp (theme.css): [L, C] per step.
+    const v4Red: Record<number, [number, number]> = {
+      50: [0.971, 0.013],
+      100: [0.936, 0.032],
+      200: [0.885, 0.062],
+      300: [0.808, 0.114],
+      400: [0.704, 0.191],
+      500: [0.637, 0.237],
+      600: [0.577, 0.245],
+      700: [0.505, 0.213],
+      800: [0.444, 0.177],
+      900: [0.396, 0.141],
+      950: [0.258, 0.092],
+    };
+
+    for (const s of stepsOf(output)) {
+      const [l, c] = v4Red[s.step]!;
+      expect(Math.abs(s.l - l)).toBeLessThanOrEqual(0.05);
+      expect(Math.abs(s.c - c)).toBeLessThanOrEqual(0.05);
+    }
+  });
+
+  test("chroma peaks at 500, whispers at 50, stays moderate at 950", () => {
+    const { output } = main(["#ff0000"]);
+    const steps = stepsOf(output);
+    const chroma = new Map(steps.map((s) => [s.step, s.c]));
+    const c50 = chroma.get(50)!;
+    const c500 = chroma.get(500)!;
+    const c950 = chroma.get(950)!;
+
+    expect(c50).toBeLessThan(c500 * 0.15);
+    expect(c950).toBeGreaterThan(c500 * 0.25);
+    expect(c950).toBeLessThan(c500);
+    for (const s of steps) {
+      expect(c500).toBeGreaterThanOrEqual(s.c);
+    }
+  });
+});

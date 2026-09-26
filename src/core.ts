@@ -1,6 +1,6 @@
 import { converter, displayable, parse } from "culori";
 import { detectName, type Oklch } from "@/name";
-import { L_MAX, L_MIN, L_TOO_DARK, L_TOO_LIGHT, TARGETS } from "@/targets";
+import { CHROMA_RATIOS, L_MAX, L_MIN, L_TOO_DARK, L_TOO_LIGHT, TARGETS } from "@/targets";
 
 export const STEPS = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950] as const;
 export type Step = (typeof STEPS)[number];
@@ -18,6 +18,14 @@ function target(step: Step): number {
     throw new Error(`missing lightness target for step ${step}`);
   }
   return t;
+}
+
+function taperRatio(step: Step): number {
+  const ratio = CHROMA_RATIOS[step];
+  if (ratio === undefined) {
+    throw new Error(`missing chroma taper ratio for step ${step}`);
+  }
+  return ratio;
 }
 
 /**
@@ -100,9 +108,9 @@ const round3 = (n: number) => Math.round(n * 1000) / 1000;
 const floor3 = (n: number) => Math.floor(n * 1000) / 1000;
 
 /**
- * Generate the full 50–950 palette from a base color. Chroma is gamut-mapped
- * at the rounded L/H and floored so the printed triple can't round its way
- * out of the sRGB gamut.
+ * Generate the full 50–950 palette from a base color. Chroma follows the
+ * v4 taper ratios, is gamut-mapped at the rounded L/H and floored so the
+ * printed triple can't round its way out of the sRGB gamut.
  */
 export function generatePalette(input: string): Palette {
   const base = parseBase(input);
@@ -110,7 +118,7 @@ export function generatePalette(input: string): Palette {
   const steps: PaletteEntry[] = STEPS.map((step) => {
     const l = round3(ladderLightness(ladder, step));
     const h = round3(base.h);
-    const c = floor3(maxInGamutChroma(l, base.c, h));
+    const c = floor3(maxInGamutChroma(l, base.c * taperRatio(step), h));
     return { step, l, c, h };
   });
   return { name: detectName(base), base, steps };
