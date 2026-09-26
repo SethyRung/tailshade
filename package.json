@@ -1,5 +1,5 @@
 {
-  "name": "@sethyrung/tailshade",
+  "name": "@sethyrung/tailwind_tools",
   "version": "0.1.0",
   "description": "Generate a full Tailwind CSS palette (50-950) from a single base color",
   "keywords": [
@@ -17,10 +17,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/SethyRung/tailshade.git"
+    "url": "git+https://github.com/SethyRung/tailwind_tools.git"
   },
   "bin": {
-    "tailshade": "bin/cli.js"
+    "tailwind_tools": "bin/cli.js"
   },
   "files": [
     "bin",

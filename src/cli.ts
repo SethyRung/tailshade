@@ -6,7 +6,7 @@ const NOTATIONS: Notation[] = ["oklch", "hex", "rgb", "hsl"];
 
 export type CliResult = { output: string; exitCode: number };
 
-const USAGE = `Usage: tailshade '<color>' [--step <50..950>] [--name <name>] [--v3] [--format <oklch|hex|rgb|hsl>] [--preview]
+const USAGE = `Usage: tailwind_tools '<color>' [--step <50..950>] [--name <name>] [--v3] [--format <oklch|hex|rgb|hsl>] [--preview]
 
 Generate a Tailwind v4 palette from a base color (any CSS color format).
 
@@ -18,10 +18,10 @@ snippet instead of the v4 @theme block. Values default to oklch; pass --format
 to switch the notation (hex, rgb, hsl). Pass --preview to print an ANSI swatch
 strip above the output.
 
-Example: tailshade '#ff0000'
-         tailshade '#111410' --step 700
-         tailshade '#ff0000' --name brand
-         tailshade '#ff0000' --v3 --format hex --preview`;
+Example: tailwind_tools '#ff0000'
+         tailwind_tools '#111410' --step 700
+         tailwind_tools '#ff0000' --name brand
+         tailwind_tools '#ff0000' --v3 --format hex --preview`;
 
 /**
  * CLI entry and the single test seam: pure — takes an argv array, returns
@@ -115,5 +115,5 @@ export function main(argv: string[]): CliResult {
 }
 
 function usage(message: string): CliResult {
-  return { output: `tailshade: ${message}\n\n${USAGE}`, exitCode: 1 };
+  return { output: `tailwind_tools: ${message}\n\n${USAGE}`, exitCode: 1 };
 }

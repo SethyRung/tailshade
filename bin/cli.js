@@ -12,6 +12,6 @@ if (typeof globalThis.Bun !== "undefined") {
 } else if (existsSync(nodeEntry)) {
   await import(pathToFileURL(nodeEntry).href);
 } else {
-  process.stderr.write("tailshade: Node needs a built CLI. Run `bun run build`.\n");
+  process.stderr.write("tailwind_tools: Node needs a built CLI. Run `bun run build`.\n");
   process.exit(1);
 }

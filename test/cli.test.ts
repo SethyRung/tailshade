@@ -10,7 +10,7 @@ function stepsOf(output: string): { step: number; l: number; c: number; h: numbe
   );
 }
 
-describe("tailshade CLI seam", () => {
+describe("tailwind_tools CLI seam", () => {
   test("hex base color prints a @theme palette with all 11 steps", () => {
     const { output, exitCode } = main(["#ff0000"]);
 
@@ -93,7 +93,7 @@ describe("tailshade CLI seam", () => {
 
       expect(exitCode).toBe(1);
       expect(output).toContain("Usage:");
-      expect(output).toContain(`tailshade '#ff0000'`);
+      expect(output).toContain(`tailwind_tools '#ff0000'`);
     });
 
     test("unparseable color exits non-zero with the input in the message", () => {
@@ -491,7 +491,7 @@ describe("--help", () => {
       const { output, exitCode } = main([flag]);
       expect(exitCode).toBe(0);
       expect(output).toContain("Usage:");
-      expect(output).toContain("Example: tailshade '#ff0000'");
+      expect(output).toContain("Example: tailwind_tools '#ff0000'");
     }
   });
 

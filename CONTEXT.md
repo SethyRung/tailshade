@@ -1,4 +1,4 @@
-# tailshade — Domain Glossary
+# tailwind_tools — Domain Glossary
 
 Generate a full Tailwind v4 palette from a single base color.
 
