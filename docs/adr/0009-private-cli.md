@@ -2,7 +2,9 @@
 
 ## Status
 
-Accepted
+Superseded — published to npm as `@sethyrung/tailshade` (public, MIT). Runnable
+via `bunx @sethyrung/tailshade` or `npx @sethyrung/tailshade`; `bun link` still
+works for local development.
 
 ## Context
 

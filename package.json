@@ -1,11 +1,44 @@
 {
-  "name": "tailshade",
+  "name": "@sethyrung/tailshade",
   "version": "0.1.0",
+  "description": "Generate a full Tailwind CSS palette (50-950) from a single base color",
+  "keywords": [
+    "cli",
+    "colors",
+    "oklch",
+    "palette",
+    "tailwind",
+    "tailwindcss"
+  ],
+  "license": "MIT",
+  "author": {
+    "name": "Sethy Rung",
+    "url": "https://sethyrung.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SethyRung/tailshade.git"
+  },
+  "bin": {
+    "tailshade": "bin/cli.js"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "src",
+    "index.ts",
+    "tsconfig.json"
+  ],
   "type": "module",
   "module": "index.ts",
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "start": "bun run index.ts",
     "dev": "bun --hot index.ts",
+    "build": "bun build index.ts --target=node --outfile=dist/cli.js --packages=external",
+    "prepack": "bun run build",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
     "lint": "oxlint",
@@ -24,5 +57,9 @@
   },
   "peerDependencies": {
     "typescript": "^7"
+  },
+  "engines": {
+    "bun": ">=1.4.0",
+    "node": ">=18"
   }
 }

@@ -4,7 +4,7 @@ Generate a full Tailwind CSS color palette (50–950) from a single base color.
 Any CSS color in, Tailwind v4 `@theme` block out.
 
 ```bash
-$ bun run index.ts '#ff0000'
+$ tailshade '#ff0000'
 @theme {
   --color-red-50: oklch(0.977 0.011 29.234);
   --color-red-100: oklch(0.945 0.027 29.234);
@@ -20,10 +20,29 @@ Your base color lands verbatim at `<name>-500`, and the ramp reads like one of
 Tailwind's own: lightness targets and chroma taper derived from v4's real
 palettes, every step gamut-mapped to sRGB.
 
+## Install
+
+No install needed — run it directly:
+
+```bash
+bunx @sethyrung/tailshade '#ff0000'
+npx @sethyrung/tailshade '#ff0000'
+```
+
+Or install globally:
+
+```bash
+bun add -g @sethyrung/tailshade   # then: tailshade '#ff0000'
+npm install -g @sethyrung/tailshade
+```
+
+Requires [Bun](https://bun.com) >= 1.4 (or Node >= 18). For local development,
+clone and `bun link` instead — edits stay live.
+
 ## Usage
 
 ```bash
-bun run index.ts '<color>' [flags]
+tailshade '<color>' [flags]
 ```
 
 The base color accepts any CSS format — hex, `rgb()`, `hsl()`, named colors, or
@@ -41,9 +60,9 @@ The base color accepts any CSS format — hex, `rgb()`, `hsl()`, named colors, o
 Examples:
 
 ```bash
-bun run index.ts 'oklch(0.6 0.1 29)' --name brand
-bun run index.ts '#ff0000' --v3 --format hex
-bun run index.ts 'teal' --preview
+tailshade 'oklch(0.6 0.1 29)' --name brand
+tailshade '#ff0000' --v3 --format hex
+tailshade 'teal' --preview
 ```
 
 ### Palette naming
@@ -55,7 +74,7 @@ out: auto-names can shadow Tailwind's built-in colors inside `@theme` — pass
 ### Tailwind v3 export
 
 ```bash
-$ bun run index.ts '#ff0000' --v3 --format hex
+$ tailshade '#ff0000' --v3 --format hex
 module.exports = {
   theme: {
     extend: {
