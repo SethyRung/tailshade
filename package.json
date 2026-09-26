@@ -1,0 +1,24 @@
+{
+  "name": "tailshade",
+  "version": "0.1.0",
+  "type": "module",
+  "module": "index.ts",
+  "scripts": {
+    "start": "bun run index.ts",
+    "dev": "bun --hot index.ts",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "oxfmt": "^0.70.0",
+    "oxlint": "^1.85.0"
+  },
+  "peerDependencies": {
+    "typescript": "^7"
+  }
+}
