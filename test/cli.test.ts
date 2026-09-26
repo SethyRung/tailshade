@@ -353,3 +353,53 @@ describe("--format notation", () => {
     expect(output).toContain("hex");
   });
 });
+
+describe("--preview swatch strip", () => {
+  test("--preview prepends an ANSI strip; the output below it is byte-identical", () => {
+    const withPreview = main(["#ff0000", "--preview"]).output;
+    const without = main(["#ff0000"]).output;
+
+    expect(withPreview.endsWith(without)).toBe(true);
+    const strip = withPreview.slice(0, withPreview.length - without.length);
+    expect(strip).toContain(`${String.fromCharCode(27)}[48;2;`);
+  });
+
+  test("the strip labels every step in plain text, 50 through 950", () => {
+    const withPreview = main(["#ff0000", "--preview"]).output;
+    const without = main(["#ff0000"]).output;
+    const strip = withPreview.slice(0, withPreview.length - without.length);
+
+    for (const step of [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950]) {
+      expect(strip).toContain(`${step}`);
+    }
+    expect(strip.indexOf("950")).toBeGreaterThan(strip.indexOf("500"));
+    expect(strip.indexOf("500")).toBeGreaterThan(strip.indexOf("50"));
+  });
+
+  test("without --preview, no output mode contains ANSI escapes", () => {
+    const ESC = String.fromCharCode(27);
+    const outputs = [
+      main(["#ff0000"]).output,
+      main(["#ff0000", "--v3"]).output,
+      main(["#ff0000", "--format", "hex"]).output,
+      main(["#ff0000", "--v3", "--format", "rgb"]).output,
+    ];
+    for (const output of outputs) {
+      expect(output).not.toContain(`${ESC}[`);
+    }
+  });
+
+  test("--preview composes with --v3 and --name", () => {
+    const withPreview = main(["#ff0000", "--v3", "--name", "brand", "--preview"]).output;
+    const without = main(["#ff0000", "--v3", "--name", "brand"]).output;
+
+    expect(withPreview.endsWith(without)).toBe(true);
+    expect(withPreview).toContain("brand:");
+  });
+
+  test("usage documents --preview", () => {
+    const { output } = main([]);
+
+    expect(output).toContain("--preview");
+  });
+});

@@ -1,7 +1,9 @@
-import { formatHex, formatHsl, formatRgb, type Color } from "culori";
+import { converter, formatHex, formatHsl, formatRgb, type Color } from "culori";
 import type { Palette, PaletteEntry } from "@/core";
 
 export type Notation = "oklch" | "hex" | "rgb" | "hsl";
+
+const toRgb = converter("rgb");
 
 const fmt = (n: number) => n.toFixed(3);
 
@@ -26,6 +28,21 @@ export function toThemeCss(palette: Palette, notation: Notation = "oklch"): stri
     (s) => `  --color-${palette.name}-${s.step}: ${valueStr(s, notation)};`,
   );
   return ["@theme {", ...lines, "}"].join("\n");
+}
+
+/**
+ * An ANSI truecolor swatch strip — one labeled block per step, 50→950 —
+ * rendered from the palette's own colors. Labels stay plain text.
+ */
+export function toPreviewStrip(palette: Palette): string {
+  const ESC = String.fromCharCode(27);
+  const blocks = palette.steps.map((s) => {
+    const rgb = toRgb(asColor(s))!;
+    const [r, g, b] = [rgb.r, rgb.g, rgb.b].map((v) => Math.round((v ?? 0) * 255));
+    const label = s.step.toString().padStart(3);
+    return `${label} ${ESC}[48;2;${r};${g};${b}m      ${ESC}[0m`;
+  });
+  return blocks.join(" ");
 }
 
 /** A paste-ready Tailwind v3 config snippet for the same palette. */

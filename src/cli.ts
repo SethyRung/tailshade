@@ -1,12 +1,12 @@
 import { generatePalette, PaletteError } from "@/core";
-import { toTailwindV3, toThemeCss, type Notation } from "@/format";
+import { toPreviewStrip, toTailwindV3, toThemeCss, type Notation } from "@/format";
 import { kebabCase } from "@/name";
 
 const NOTATIONS: Notation[] = ["oklch", "hex", "rgb", "hsl"];
 
 export type CliResult = { output: string; exitCode: number };
 
-const USAGE = `Usage: tailshade '<color>' [--name <name>] [--v3] [--format <oklch|hex|rgb|hsl>]
+const USAGE = `Usage: tailshade '<color>' [--name <name>] [--v3] [--format <oklch|hex|rgb|hsl>] [--preview]
 
 Generate a Tailwind v4 palette from a base color (any CSS color format).
 
@@ -14,11 +14,12 @@ The palette name defaults to the nearest CSS color name, which can shadow
 Tailwind's built-in colors (red, teal, ...) inside @theme — pass --name to
 choose your own. Pass --v3 to export a tailwind.config.js snippet instead of
 the v4 @theme block. Values default to oklch; pass --format to switch the
-notation (hex, rgb, hsl).
+notation (hex, rgb, hsl). Pass --preview to print an ANSI swatch strip above
+the output.
 
 Example: tailshade '#ff0000'
          tailshade '#ff0000' --name brand
-         tailshade '#ff0000' --v3 --format hex`;
+         tailshade '#ff0000' --v3 --format hex --preview`;
 
 /**
  * CLI entry and the single test seam: pure — takes an argv array, returns
@@ -28,6 +29,7 @@ export function main(argv: string[]): CliResult {
   let color: string | undefined;
   let name: string | undefined;
   let v3 = false;
+  let preview = false;
   let notation: Notation | undefined;
 
   for (let i = 0; i < argv.length; i++) {
@@ -38,6 +40,10 @@ export function main(argv: string[]): CliResult {
         return usage("--name requires a value");
       }
       name = value;
+      continue;
+    }
+    if (arg === "--preview") {
+      preview = true;
       continue;
     }
     if (arg === "--format") {
@@ -77,7 +83,10 @@ export function main(argv: string[]): CliResult {
       palette.name = kebab;
     }
     const fmt = notation ?? "oklch";
-    const output = v3 ? toTailwindV3(palette, fmt) : toThemeCss(palette, fmt);
+    let output = v3 ? toTailwindV3(palette, fmt) : toThemeCss(palette, fmt);
+    if (preview) {
+      output = `${toPreviewStrip(palette)}\n\n${output}`;
+    }
     return { output, exitCode: 0 };
   } catch (error) {
     if (error instanceof PaletteError) {
