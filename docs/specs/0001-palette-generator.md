@@ -18,8 +18,8 @@ oklch custom properties, formatted exactly like Tailwind v4's own files. My
 Base color appears verbatim at `<name>-500`. The Ramp reads like a designed
 palette: Lightness targets distributed v4-style, a Chroma curve that peaks at
 the base and tapers toward both ends, every Step gamut-mapped so nothing clips.
-Zero flags required — the Name is auto-detected — with `--name`, `--json`,
-`--ts`, and `--preview` swatches one flag away.
+Zero flags required — the Name is auto-detected — with `--name`, `--v3`
+(a Tailwind v3 config export), and `--preview` swatches one flag away.
 
 ## User Stories
 
@@ -32,12 +32,12 @@ Zero flags required — the Name is auto-detected — with `--name`, `--json`,
 7. As a developer, I want constant hue across every Step, so that the palette is a predictable function of my input.
 8. As a developer, I want every Step gamut-mapped to sRGB, so that pasted CSS never renders clipped colors.
 9. As a developer, I want the default output to be a @theme block, so that I can paste it straight into my theme CSS.
-10. As a developer, I want `--json`, so that other tooling can consume the Palette.
-11. As a developer, I want `--ts`, so that TypeScript code can import the Palette.
+10. As a Tailwind v3 developer, I want `--v3`, so that I can paste a tailwind.config.js snippet into my legacy project.
+11. As a developer, I want the v3 export to carry the same palette as the v4 output, so that palettes stay consistent across major versions.
 12. As a developer, I want the Name auto-detected from the Nearest name, so that a zero-flag run works.
 13. As a developer, I want `--name` to override auto-detection, so that my palette never shadows Tailwind's default colors by accident.
 14. As a designer, I want a Swatch preview on demand, so that I can eyeball the Ramp before committing to it.
-15. As a developer, I want default output free of ANSI escapes, so that redirection always produces valid CSS/JSON/TS.
+15. As a developer, I want default output free of ANSI escapes, so that redirection always produces valid CSS/JS.
 16. As a developer, I want clear errors with quoted examples when my color fails to parse, so that I can fix my own command.
 17. As a script author, I want a non-zero exit code on bad input, so that pipelines fail loudly.
 18. As a developer, I want achromatic bases to produce a gray Ramp, so that monochrome brands work.
@@ -46,6 +46,7 @@ Zero flags required — the Name is auto-detected — with `--name`, `--json`,
 21. As a user, I want to run the tool straight from the repo with Bun, so that there's nothing to install or publish.
 22. As a maintainer, I want the generation core importable as a library, so that a future web playground reuses it without going through the CLI.
 23. As a maintainer, I want tests to run through one seam — the CLI entry called in-process — so that tests cover external behavior only.
+24. As a developer, I want `--format hex|rgb|hsl`, so that emitted values match what my project or tooling expects (ADR-0013).
 
 ## Implementation Decisions
 
@@ -63,15 +64,19 @@ Zero flags required — the Name is auto-detected — with `--name`, `--json`,
   are derived from v4's real ramps and are fixed, not configurable (ADR-0006).
 - Hue is constant across all Steps; no drift, no flag (ADR-0007). Achromatic
   bases (C ≈ 0) yield a pure gray Ramp.
-- Output defaults to a @theme block; `--json` and `--ts` emit the same Palette
-  as structured data (ADR-0004). oklch values are formatted at three decimals.
+- Output defaults to a @theme block; `--v3` emits the same Palette as a
+  Tailwind v3 config snippet (module.exports with theme.extend.colors). The
+  color notation of emitted values is selected by `--format`
+  (oklch default, plus hex/rgb/hsl) in both modes (ADR-0012, ADR-0013; these
+  supersede ADR-0004's --json/--ts flags). oklch values are formatted at
+  three decimals.
 - The Name defaults to the Nearest name (culori's closest CSS named color,
   kebab-cased); `--name` overrides. No automatic suffixing of colliding names
   (ADR-0008).
 - Distribution is a private CLI run from the repo via Bun; no npm publishing
   (ADR-0009).
 - Invocation is `tailshade <color> [flags]`: one positional color, flags
-  `--name`, `--json`, `--ts`, `--preview`. Missing or unparseable color exits
+  `--name`, `--v3`, `--format`, `--preview`. Missing or unparseable color exits
   non-zero with quoted examples (ADR-0010).
 - stdout is always pipe-clean; `--preview` adds the ANSI Swatch preview above
   the output. No TTY sniffing, no conditional behavior (ADR-0011).
@@ -91,8 +96,9 @@ Zero flags required — the Name is auto-detected — with `--name`, `--json`,
   golden fixture sanity-checked against Tailwind's own ramp (with tolerance,
   since exact reproduction of hand-tuned values is not the goal); gray base →
   gray Ramp; extreme bases → compressed, distinct Steps; Nearest-name
-  detection and `--name` override; `--json` parses as JSON; `--ts` contains
-  the expected export; `--preview` prepends an ANSI block; clean color
+  detection and `--name` override; `--v3` emits a syntactically valid config
+  snippet nesting the palette under theme.extend.colors; `--preview` prepends
+  an ANSI block; clean color
   missing/bad → non-zero exit with quoted example in the message.
 - Prior art: none — the repo is greenfield; `bun test` idioms apply.
 

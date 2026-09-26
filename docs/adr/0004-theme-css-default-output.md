@@ -2,7 +2,8 @@
 
 ## Status
 
-Accepted
+Superseded by ADR-0012 (default section stands; --json/--ts dropped in favor
+of --v3 config export)
 
 ## Context
 

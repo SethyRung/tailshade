@@ -30,5 +30,11 @@ exactly, in code, docs, and conversation.
   space (sRGB).
 - **@theme block** — Tailwind v4's CSS custom-property container; the default
   output format (see ADR-0004).
+- **v3 export** — Tailwind v3 config snippet (`module.exports` with
+  `theme.extend.colors`) emitted by `--v3`, holding the same oklch values
+  (see ADR-0012).
+- **Notation** — the color notation of emitted values: oklch (default), hex,
+  rgb, or hsl; selected by `--format` in both output modes (see ADR-0013).
+  The Palette itself always lives in OKLCH internally.
 - **OKLCH** — the perceptual color space (L lightness, C chroma, H hue) used
   as the internal representation (see ADR-0002).
