@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import pkg from "../package.json" with { type: "json" };
 import { main } from "@/cli";
 
 describe("root routing", () => {
@@ -68,6 +69,33 @@ describe("root routing", () => {
       expect(output).toContain(`unknown command '${token}'`);
       expect(output).not.toContain("looks like a base color");
     }
+  });
+});
+
+describe("version", () => {
+  test("--version and -v print the package version and exit zero", () => {
+    for (const flag of ["--version", "-v"]) {
+      const { output, exitCode } = main([flag]);
+      expect(exitCode).toBe(0);
+      expect(output).toBe(pkg.version);
+    }
+  });
+
+  test("--version works alongside a command", () => {
+    for (const argv of [
+      ["palette", "--version"],
+      ["palette", "-v"],
+    ]) {
+      const { output, exitCode } = main(argv);
+      expect(exitCode).toBe(0);
+      expect(output).toBe(pkg.version);
+    }
+  });
+
+  test("root usage documents the version flag", () => {
+    const { output } = main([]);
+
+    expect(output).toContain("--version");
   });
 });
 

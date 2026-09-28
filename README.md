@@ -47,7 +47,8 @@ tailwind_tools palette [flags] --color '<color>'
 ```
 
 The command word is required — `tailwind_tools palette --help` prints the
-palette usage, and a bare `tailwind_tools` lists the commands. The base color
+palette usage, a bare `tailwind_tools` lists the commands, and
+`tailwind_tools --version` (or `-v`) prints the version. The base color
 is the argument next to `palette`, or the `--color` flag's value — never
 both. It accepts any CSS format — hex, `rgb()`, `hsl()`, named colors, or
 `oklch()` (which passes through untouched).

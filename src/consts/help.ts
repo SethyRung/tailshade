@@ -1,7 +1,11 @@
 export const ROOT_USAGE = `Usage: tailwind_tools <command>
 
 Commands:
-  palette   Generate a palette from a base color`;
+  palette   Generate a palette from a base color
+
+Options:
+      --version  Show version
+  -h, --help     Show help`;
 
 export const PALETTE_USAGE = `Usage: tailwind_tools palette '<color>' [flags]
        tailwind_tools palette [flags] --color '<color>'

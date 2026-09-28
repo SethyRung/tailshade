@@ -1,4 +1,5 @@
 import { parse } from "culori";
+import pkg from "../package.json" with { type: "json" };
 import { paletteCommand } from "@/commands/palette";
 import { commandHelpTexts, ROOT_USAGE } from "@/consts/help";
 import type { CliResult } from "@/types/result";
@@ -13,6 +14,9 @@ export function main(argv: string[]): CliResult {
     const named = argv.find((arg) => commandHelpTexts[arg] !== undefined);
     const output = named !== undefined ? commandHelpTexts[named]! : ROOT_USAGE;
     return { output, exitCode: 0 };
+  }
+  if (argv.includes("--version") || argv.includes("-v")) {
+    return { output: pkg.version, exitCode: 0 };
   }
   if (command === undefined) {
     return rootUsage("expected a command");
