@@ -36,7 +36,6 @@
   },
   "scripts": {
     "start": "bun run index.ts",
-    "dev": "bun --hot index.ts",
     "build": "bun build index.ts --target=node --outfile=dist/cli.js --packages=external",
     "prepack": "bun run build",
     "test": "bun test",
