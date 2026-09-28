@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Superseded by ADR-0015 (positional color form dropped; `palette` is required)
 
 ## Context
 

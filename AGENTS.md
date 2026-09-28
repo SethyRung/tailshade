@@ -1,105 +1,54 @@
-Default to using Bun instead of Node.js.
+# tailwind_tools
 
-- Use `bun <file>` instead of `node <file>` or `ts-node <file>`
-- Use `bun test` instead of `jest` or `vitest`
-- Use `bun build <file.html|file.ts|file.css>` instead of `webpack` or `esbuild`
-- Use `bun install` instead of `npm install` or `yarn install` or `pnpm install`
-- Use `bun run <script>` instead of `npm run <script>` or `yarn run <script>` or `pnpm run <script>`
-- Use `bunx <package> <command>` instead of `npx <package> <command>`
-- Bun automatically loads .env, so don't use dotenv.
+One-shot CLI: one CSS base color in, a Tailwind 50–950 palette out. Package `@sethyrung/tailwind_tools`, binary `tailwind_tools`. No server and no UI (`jsx` in `tsconfig.json` is unused scaffold).
 
-## APIs
+## How it runs
 
-- `Bun.serve()` supports WebSockets, HTTPS, and routes. Don't use `express`.
-- `bun:sqlite` for SQLite. Don't use `better-sqlite3`.
-- `Bun.redis` for Redis. Don't use `ioredis`.
-- `Bun.sql` for Postgres. Don't use `pg` or `postgres.js`.
-- `WebSocket` is built-in. Don't use `ws`.
-- Prefer `Bun.file` over `node:fs`'s readFile/writeFile
-- Bun.$`ls` instead of execa.
+- Repo commands use Bun (`bun install`, `bun test`, `bun run <script>`). Engines: Bun >= 1.4, Node >= 18.
+- `bin/cli.js` is the published bin. On Bun it imports `index.ts`, so source stays live (`bun link` included). On Node it imports `dist/cli.js`.
+- `dist/cli.js` exists only after `bun run build` (`--target=node --packages=external`). `prepack` runs that build. `dist/` is generated and gitignored.
+- `package.json` `files` includes `bin`, `dist`, `src`, `index.ts`, and `tsconfig.json` so a published Bun install can import the TypeScript entry. Keep those.
+- `index.ts` must keep its top-level run: call `main`, print `output`, set `process.exitCode`. The bin works by importing that file.
 
-## Testing
+## Code
 
-Use `bun test` to run tests.
+- `main(argv)` in `src/cli.ts` is pure: argv in, `{ output, exitCode }` out, no I/O. That function is the only test seam.
+- Generation is `src/core.ts` (culori, internal OKLCH). `src/targets.ts` holds fixed v4-derived lightness and chroma constants, not flags.
+- Import with the `@/*` alias (`@/core`), no `.ts` suffix. `verbatimModuleSyntax` is on: type-only names use `import type` or inline `type`.
+- `bun run typecheck` is the repo's TypeScript 7 (`peerDependencies`). Do not add a TypeScript 5 dependency.
 
-```ts#index.test.ts
-import { test, expect } from "bun:test";
+## Tests
 
-test("hello world", () => {
-  expect(1).toBe(1);
-});
+Call `main` from `@/cli` and assert on the returned string and exit code. Recover numbers by parsing that text. Suite is `test/cli.test.ts`. Do not spawn the binary or unit-test `src/` helpers.
+
+```bash
+bun test
+bun test -t "substring"
 ```
 
-## Frontend
+## Invariants
 
-Use HTML imports with `Bun.serve()`. Don't use `vite`. HTML imports fully support React, CSS, Tailwind.
+- The base color is verbatim at `--step` (default 500). The chroma taper is scaled relative to that anchor.
+- Default stdout is pipe-clean. ANSI is added only when `--preview` is passed.
+- Emitted notation is `--format` (`oklch` default, or `hex` / `rgb` / `hsl`) for both the `@theme` block and `--v3`. `--json` and `--ts` stay rejected. The palette stays OKLCH internally.
+- The name is the nearest CSS color, kebab-cased. Collisions with Tailwind builtins stay as detected; `--name` is the only override. Hue is constant across steps.
 
-Server:
+## Docs that lag the code
 
-```ts#index.ts
-import index from "./index.html"
+`docs/adr`, `docs/specs`, and the `bun.lock` workspace name still say `tailshade`. Some ADRs still describe `--json` / `--ts` or a private unpublished CLI. Package, binary, and help text are `tailwind_tools`. When an ADR or spec disagrees with `src/`, `test/`, or `README.md`, follow the code.
 
-Bun.serve({
-  routes: {
-    "/": index,
-    "/api/users/:id": {
-      GET: (req) => {
-        return new Response(JSON.stringify({ id: req.params.id }));
-      },
-    },
-  },
-  // optional websocket support
-  websocket: {
-    open: (ws) => {
-      ws.send("Hello, world!");
-    },
-    message: (ws, message) => {
-      ws.send(message);
-    },
-    close: (ws) => {
-      // handle close
-    }
-  },
-  development: {
-    hmr: true,
-    console: true,
-  }
-})
-```
+Use glossary words from `CONTEXT.md` when naming domain concepts in code, docs, tests, or help text.
 
-HTML files can import .tsx, .jsx or .js files directly and Bun's bundler will transpile & bundle automatically. `<link>` tags can point to stylesheets and Bun's CSS bundler will bundle.
+Read the matching file in `docs/adr` before changing generation, output format, naming, or flags.
 
-```html#index.html
-<html>
-  <body>
-    <h1>Hello, world!</h1>
-    <script type="module" src="./frontend.tsx"></script>
-  </body>
-</html>
-```
+`.scratch/` is gitignored. Issue and spec layout is in `docs/agents/issue-tracker.md`.
 
-With the following `frontend.tsx`:
+## Agent skills
 
-```tsx#frontend.tsx
-import React from "react";
-import { createRoot } from "react-dom/client";
+### Issue tracker
 
-// import .css files directly and it works
-import './index.css';
+Issues and specs live as markdown files in `.scratch/`. See `docs/agents/issue-tracker.md`.
 
-const root = createRoot(document.body);
+### Domain docs
 
-export default function Frontend() {
-  return <h1>Hello, world!</h1>;
-}
-
-root.render(<Frontend />);
-```
-
-Then, run index.ts
-
-```sh
-bun --hot ./index.ts
-```
-
-For more information, read the Bun API docs in `node_modules/bun-types/docs/**.mdx`.
+Single-context: one root `CONTEXT.md` and `docs/adr/`. See `docs/agents/domain.md`.
