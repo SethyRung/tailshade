@@ -12,9 +12,12 @@ const ROOT_USAGE = `Usage: tailwind_tools <command>
 Commands:
   palette   Generate a palette from a base color`;
 
-const PALETTE_USAGE = `Usage: tailwind_tools palette '<color>' [--step <50..950>] [--name <name>] [--v3] [--format <oklch|hex|rgb|hsl>] [--preview]
+const PALETTE_USAGE = `Usage: tailwind_tools palette '<color>' [flags]
+       tailwind_tools palette [flags] --color '<color>'
 
 Generate a Tailwind v4 palette from a base color (any CSS color format).
+The base color is the argument next to palette, or the --color flag's
+value — never both.
 
 The base color anchors at step 500 by default — pass --step to anchor at any
 shade (50, 100, 200, ..., 950). The palette name defaults to the nearest CSS
@@ -26,7 +29,7 @@ strip above the output.
 
 Example: tailwind_tools palette '#ff0000'
          tailwind_tools palette '#111410' --step 700
-         tailwind_tools palette '#ff0000' --name brand
+         tailwind_tools palette --color '#ff0000' --name brand
          tailwind_tools palette '#ff0000' --v3 --format hex --preview`;
 
 /**
@@ -74,15 +77,28 @@ function paletteCommand(args: string[]): CliResult {
   return runPalette(undefined, args);
 }
 
-function runPalette(color: string | undefined, args: string[]): CliResult {
+function runPalette(positional: string | undefined, args: string[]): CliResult {
   let name: string | undefined;
   let step: Step = 500;
   let v3 = false;
   let preview = false;
   let notation: Notation | undefined;
+  let colorFlag: string | undefined;
+  let extraPositional = false;
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i]!;
+    if (arg === "--color") {
+      const value = args[++i];
+      if (value === undefined || value.startsWith("--")) {
+        return usage("--color requires a value");
+      }
+      if (colorFlag !== undefined) {
+        return usage("--color given twice");
+      }
+      colorFlag = value;
+      continue;
+    }
     if (arg === "--step") {
       const value = args[++i];
       if (value === undefined || value.startsWith("--")) {
@@ -125,9 +141,18 @@ function runPalette(color: string | undefined, args: string[]): CliResult {
     if (arg.startsWith("--")) {
       return usage(`unknown flag '${arg}'`);
     }
-    return usage("expected exactly one color argument");
+    extraPositional = true;
   }
+  if (positional !== undefined && colorFlag !== undefined) {
+    return usage("got a color next to palette and --color");
+  }
+  const color = positional ?? colorFlag;
   if (color === undefined) {
+    return usage(
+      "expected a base color\nPass it as: tailwind_tools palette '<color>'\n      or as: tailwind_tools palette --color '<color>'",
+    );
+  }
+  if (extraPositional) {
     return usage("expected exactly one color argument");
   }
 

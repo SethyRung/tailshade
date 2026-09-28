@@ -512,6 +512,83 @@ describe("--help", () => {
   });
 });
 
+describe("--color flag", () => {
+  test("--color prints the same palette as the adjacent form", () => {
+    const viaFlag = main(["palette", "--color", "#ff0000", "--step", "700"]);
+    const viaSlot = main(["palette", "#ff0000", "--step", "700"]);
+
+    expect(viaFlag.exitCode).toBe(0);
+    expect(viaFlag.output).toBe(viaSlot.output);
+  });
+
+  test("--color composes with every existing flag", () => {
+    const { output, exitCode } = main([
+      "palette",
+      "--color",
+      "#111410",
+      "--step",
+      "700",
+      "--name",
+      "brand",
+      "--v3",
+      "--format",
+      "hex",
+      "--preview",
+    ]);
+
+    expect(exitCode).toBe(0);
+    expect(output).toContain('700: "#111410",');
+    expect(output).toContain("brand:");
+    expect(output).toContain(`${String.fromCharCode(27)}[48;2;`);
+  });
+
+  test("--color with a missing or flag-shaped value exits non-zero", () => {
+    const missing = main(["palette", "--color"]);
+    expect(missing.exitCode).toBe(1);
+    expect(missing.output).toContain("--color requires a value");
+
+    expect(main(["palette", "--color", "--step"]).exitCode).toBe(1);
+
+    const bad = main(["palette", "--color", "notacolor"]);
+    expect(bad.exitCode).toBe(1);
+    expect(bad.output).toContain("notacolor");
+  });
+
+  test("--color twice exits non-zero with no winner, even when values match", () => {
+    const twice = main(["palette", "--color", "#ff0000", "--color", "#ff0000"]);
+
+    expect(twice.exitCode).toBe(1);
+    expect(twice.output).toContain("--color given twice");
+    expect(twice.output).not.toContain("--color-");
+    expect(main(["palette", "--color", "#ff0000", "--color", "#00ff00"]).exitCode).toBe(1);
+  });
+
+  test("a color next to palette and --color both exit non-zero", () => {
+    const both = main(["palette", "#000000", "--color", "#ff0000"]);
+
+    expect(both.exitCode).toBe(1);
+    expect(both.output).toContain("got a color next to palette and --color");
+    expect(both.output).not.toContain("--color-");
+  });
+
+  test("no base color at all exits non-zero quoting both forms", () => {
+    const none = main(["palette"]);
+
+    expect(none.exitCode).toBe(1);
+    expect(none.output).toContain("expected a base color");
+    expect(none.output).toContain(`tailwind_tools palette '<color>'`);
+    expect(none.output).toContain(`tailwind_tools palette --color '<color>'`);
+  });
+
+  test("a color after flags is the missing-base-color error, not a positional", () => {
+    const { output, exitCode } = main(["palette", "--step", "700", "#ff0000"]);
+
+    expect(exitCode).toBe(1);
+    expect(output).toContain("expected a base color");
+    expect(output).not.toContain("--color-");
+  });
+});
+
 describe("root routing", () => {
   test("the palette command prints the same palette as the old bare form", () => {
     const { output, exitCode } = main(["palette", "#ff0000"]);

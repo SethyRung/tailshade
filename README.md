@@ -43,16 +43,19 @@ clone and `bun link` instead — edits stay live.
 
 ```bash
 tailwind_tools palette '<color>' [flags]
+tailwind_tools palette [flags] --color '<color>'
 ```
 
 The command word is required — `tailwind_tools palette --help` prints the
 palette usage, and a bare `tailwind_tools` lists the commands. The base color
-accepts any CSS format — hex, `rgb()`, `hsl()`, named colors, or `oklch()`
-(which passes through untouched).
+is the argument next to `palette`, or the `--color` flag's value — never
+both. It accepts any CSS format — hex, `rgb()`, `hsl()`, named colors, or
+`oklch()` (which passes through untouched).
 
 | Flag                              | Effect                                                              |
 | --------------------------------- | ------------------------------------------------------------------- |
 | _(none)_                          | Tailwind v4 `@theme` block, oklch values (default)                  |
+| `--color <color>`                 | Base color as a flag — for when the slot next to `palette` is empty |
 | `--step <50..950>`                | Anchor base color to a specific shade (default: 500)                |
 | `--name <name>`                   | Override the auto-detected palette name                             |
 | `--v3`                            | Export a `tailwind.config.js` snippet instead of the `@theme` block |
@@ -64,7 +67,7 @@ Examples:
 
 ```bash
 tailwind_tools palette '#111410' --step 700
-tailwind_tools palette 'oklch(0.6 0.1 29)' --name brand
+tailwind_tools palette --color '#ff0000' --name brand
 tailwind_tools palette '#ff0000' --v3 --format hex
 tailwind_tools palette 'teal' --preview
 ```
