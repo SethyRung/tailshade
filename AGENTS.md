@@ -13,13 +13,14 @@ One-shot CLI: one CSS base color in, a Tailwind 50–950 palette out. Package `@
 ## Code
 
 - `main(argv)` in `src/cli.ts` is pure: argv in, `{ output, exitCode }` out, no I/O. That function is the only test seam.
-- Generation is `src/core.ts` (culori, internal OKLCH). `src/targets.ts` holds fixed v4-derived lightness and chroma constants, not flags.
+- `src/cli.ts` is the router only: help routing, the color-literal hint, unknown command/flag, dispatch. One module per command under `src/commands/`; usage texts in `src/consts/help.ts`; value-flag parsing via `takeValue` in `src/utils/parse.ts`; shared types in `src/types/result.ts` (ADR-0016). A new command is a module, an if-branch, a help entry, and a root-usage line.
+- Generation is `src/utils/palette/core.ts` (culori, internal OKLCH). `src/utils/palette/targets.ts` holds fixed v4-derived lightness and chroma constants, not flags. The palette library under `src/utils/palette/` is the ADR-0001 pure core — importable without the CLI.
 - Import with the `@/*` alias (`@/core`), no `.ts` suffix. `verbatimModuleSyntax` is on: type-only names use `import type` or inline `type`.
 - `bun run typecheck` is the repo's TypeScript 7 (`peerDependencies`). Do not add a TypeScript 5 dependency.
 
 ## Tests
 
-Call `main` from `@/cli` and assert on the returned string and exit code. Recover numbers by parsing that text. Suite is `test/cli.test.ts`. Do not spawn the binary or unit-test `src/` helpers.
+Call `main` from `@/cli` and assert on the returned string and exit code. Recover numbers by parsing that text. Root routing lives in `test/root.test.ts`; each command's suite is `test/commands/<command>.test.ts`. Do not spawn the binary or unit-test `src/` helpers.
 
 ```bash
 bun test

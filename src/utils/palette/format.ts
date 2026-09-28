@@ -1,5 +1,5 @@
 import { converter, formatHex, formatHsl, formatRgb, type Color } from "culori";
-import type { Palette, PaletteEntry } from "@/core";
+import type { Palette, PaletteEntry } from "@/utils/palette/core";
 
 export type Notation = "oklch" | "hex" | "rgb" | "hsl";
 

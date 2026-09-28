@@ -1,6 +1,6 @@
 import { converter, displayable, parse } from "culori";
-import { detectName, type Oklch } from "@/name";
-import { CHROMA_RATIOS, L_MAX, L_MIN, LIGHTNESS_BOUNDS, TARGETS } from "@/targets";
+import { detectName, type Oklch } from "@/utils/palette/name";
+import { CHROMA_RATIOS, L_MAX, L_MIN, LIGHTNESS_BOUNDS, TARGETS } from "@/utils/palette/targets";
 
 export const STEPS = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950] as const;
 export type Step = (typeof STEPS)[number];

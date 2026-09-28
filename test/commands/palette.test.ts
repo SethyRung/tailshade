@@ -96,6 +96,10 @@ describe("tailwind_tools CLI seam", () => {
       expect(output).toContain(`tailwind_tools palette '#ff0000'`);
     });
 
+    test("a missing color still exits non-zero (distinct from --help)", () => {
+      expect(main(["palette"]).exitCode).toBe(1);
+    });
+
     test("unparseable color exits non-zero with the input in the message", () => {
       const { output, exitCode } = main(["palette", "notacolor"]);
 
@@ -414,8 +418,15 @@ describe("--format notation", () => {
     }
   });
 
-  test("--format with a missing or unknown scheme exits non-zero", () => {
-    expect(main(["palette", "#ff0000", "--format"]).exitCode).toBe(1);
+  test("--format with a missing or flag-shaped value exits non-zero", () => {
+    const missing = main(["palette", "#ff0000", "--format"]);
+    expect(missing.exitCode).toBe(1);
+    expect(missing.output).toContain("--format requires a value");
+
+    const flagShaped = main(["palette", "#ff0000", "--format", "--v3"]);
+    expect(flagShaped.exitCode).toBe(1);
+    expect(flagShaped.output).toContain("--format requires a value");
+
     const bad = main(["palette", "#ff0000", "--format", "cmyk"]);
     expect(bad.exitCode).toBe(1);
     expect(bad.output).toContain("cmyk");
@@ -483,32 +494,6 @@ describe("--preview swatch strip", () => {
     const { output } = main(["palette", "--help"]);
 
     expect(output).toContain("--preview");
-  });
-});
-
-describe("--help", () => {
-  test("--help and -h print usage and exit zero", () => {
-    for (const flag of ["--help", "-h"]) {
-      const root = main([flag]);
-      expect(root.exitCode).toBe(0);
-      expect(root.output).toContain("Usage: tailwind_tools <command>");
-
-      const palette = main(["palette", flag]);
-      expect(palette.exitCode).toBe(0);
-      expect(palette.output).toContain("Example: tailwind_tools palette '#ff0000'");
-    }
-  });
-
-  test("--help wins over other arguments", () => {
-    const { output, exitCode } = main(["palette", "#ff0000", "--help"]);
-
-    expect(exitCode).toBe(0);
-    expect(output).toContain("Usage:");
-    expect(output).not.toContain("--color-");
-  });
-
-  test("a missing color still exits non-zero (distinct from --help)", () => {
-    expect(main(["palette"]).exitCode).toBe(1);
   });
 });
 
@@ -586,108 +571,5 @@ describe("--color flag", () => {
     expect(exitCode).toBe(1);
     expect(output).toContain("expected a base color");
     expect(output).not.toContain("--color-");
-  });
-});
-
-describe("root routing", () => {
-  test("the palette command prints the same palette as the old bare form", () => {
-    const { output, exitCode } = main(["palette", "#ff0000"]);
-
-    expect(exitCode).toBe(0);
-    expect(output).toContain("@theme {");
-    expect(output).toContain("--color-red-500:");
-  });
-
-  test("a bare base color no longer runs", () => {
-    const { output, exitCode } = main(["#ff0000"]);
-
-    expect(exitCode).toBe(1);
-    expect(output).not.toContain("--color-");
-  });
-
-  test("no arguments prints root usage and exits non-zero", () => {
-    const { output, exitCode } = main([]);
-
-    expect(exitCode).toBe(1);
-    expect(output).toContain("tailwind_tools: expected a command");
-    expect(output).toContain("Usage: tailwind_tools <command>");
-    expect(output).toContain("Commands:");
-    expect(output).toContain("palette");
-  });
-
-  test("root --help and -h print root usage and exit zero", () => {
-    for (const flag of ["--help", "-h"]) {
-      const { output, exitCode } = main([flag]);
-      expect(exitCode).toBe(0);
-      expect(output).toContain("Usage: tailwind_tools <command>");
-      expect(output).toContain("palette");
-      expect(output).not.toContain("Example:");
-    }
-  });
-
-  test("help with palette anywhere prints palette usage and exits zero", () => {
-    const forms = [
-      ["palette", "--help"],
-      ["--help", "palette"],
-      ["palette", "-h"],
-      ["-h", "palette"],
-    ];
-    for (const argv of forms) {
-      const { output, exitCode } = main(argv);
-      expect(exitCode).toBe(0);
-      expect(output).toContain("Usage: tailwind_tools palette");
-      expect(output).toContain("Example: tailwind_tools palette '#ff0000'");
-    }
-  });
-
-  test("help without a command prints root usage, no hint", () => {
-    const { output, exitCode } = main(["--help", "#ff0000"]);
-
-    expect(exitCode).toBe(0);
-    expect(output).toContain("Usage: tailwind_tools <command>");
-    expect(output).not.toContain("looks like a base color");
-  });
-
-  test("an unknown command exits non-zero naming the token", () => {
-    const { output, exitCode } = main(["nosuch"]);
-
-    expect(exitCode).toBe(1);
-    expect(output).toContain("unknown command 'nosuch'");
-    expect(output).toContain("Usage: tailwind_tools <command>");
-  });
-
-  test("only lowercase palette dispatches", () => {
-    const { output, exitCode } = main(["Palette", "#ff0000"]);
-
-    expect(exitCode).toBe(1);
-    expect(output).toContain("unknown command 'Palette'");
-    expect(output).not.toContain("--color-");
-  });
-
-  test("a leading unknown flag is not dispatched into palette", () => {
-    const { output, exitCode } = main(["--step", "700", "palette", "#ff0000"]);
-
-    expect(exitCode).toBe(1);
-    expect(output).toContain("unknown flag '--step'");
-    expect(output).not.toContain("--color-");
-  });
-
-  test("a color literal as the first token hints the palette form", () => {
-    for (const color of ["#ff0000", "oklch(0.6 0.1 29)", "rgba(0, 0, 0)"]) {
-      const { output, exitCode } = main([color]);
-      expect(exitCode).toBe(1);
-      expect(output).toContain("looks like a base color");
-      expect(output).toContain(`tailwind_tools palette '${color}'`);
-      expect(output).not.toContain("--color-");
-    }
-  });
-
-  test("non-parsing shapes and bare words are unknown commands", () => {
-    for (const token of ["teal", "foo(", "#ggg"]) {
-      const { output, exitCode } = main([token]);
-      expect(exitCode).toBe(1);
-      expect(output).toContain(`unknown command '${token}'`);
-      expect(output).not.toContain("looks like a base color");
-    }
   });
 });
