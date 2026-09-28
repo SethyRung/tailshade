@@ -4,7 +4,7 @@ Generate a full Tailwind CSS color palette (50–950) from a single base color.
 Any CSS color in, Tailwind v4 `@theme` block out.
 
 ```bash
-$ tailwind_tools '#ff0000'
+$ tailwind_tools palette '#ff0000'
 @theme {
   --color-red-50: oklch(0.977 0.011 29.234);
   --color-red-100: oklch(0.945 0.027 29.234);
@@ -25,14 +25,14 @@ taper derived from v4's real palettes, every step gamut-mapped to sRGB.
 No install needed — run it directly:
 
 ```bash
-bunx @sethyrung/tailwind_tools '#ff0000'
-npx @sethyrung/tailwind_tools '#ff0000'
+bunx @sethyrung/tailwind_tools palette '#ff0000'
+npx @sethyrung/tailwind_tools palette '#ff0000'
 ```
 
 Or install globally:
 
 ```bash
-bun add -g @sethyrung/tailwind_tools   # then: tailwind_tools '#ff0000'
+bun add -g @sethyrung/tailwind_tools   # then: tailwind_tools palette '#ff0000'
 npm install -g @sethyrung/tailwind_tools
 ```
 
@@ -42,11 +42,13 @@ clone and `bun link` instead — edits stay live.
 ## Usage
 
 ```bash
-tailwind_tools '<color>' [flags]
+tailwind_tools palette '<color>' [flags]
 ```
 
-The base color accepts any CSS format — hex, `rgb()`, `hsl()`, named colors, or
-`oklch()` (which passes through untouched).
+The command word is required — `tailwind_tools palette --help` prints the
+palette usage, and a bare `tailwind_tools` lists the commands. The base color
+accepts any CSS format — hex, `rgb()`, `hsl()`, named colors, or `oklch()`
+(which passes through untouched).
 
 | Flag                              | Effect                                                              |
 | --------------------------------- | ------------------------------------------------------------------- |
@@ -61,10 +63,10 @@ The base color accepts any CSS format — hex, `rgb()`, `hsl()`, named colors, o
 Examples:
 
 ```bash
-tailwind_tools '#111410' --step 700
-tailwind_tools 'oklch(0.6 0.1 29)' --name brand
-tailwind_tools '#ff0000' --v3 --format hex
-tailwind_tools 'teal' --preview
+tailwind_tools palette '#111410' --step 700
+tailwind_tools palette 'oklch(0.6 0.1 29)' --name brand
+tailwind_tools palette '#ff0000' --v3 --format hex
+tailwind_tools palette 'teal' --preview
 ```
 
 ### Palette naming
@@ -76,7 +78,7 @@ out: auto-names can shadow Tailwind's built-in colors inside `@theme` — pass
 ### Tailwind v3 export
 
 ```bash
-$ tailwind_tools '#ff0000' --v3 --format hex
+$ tailwind_tools palette '#ff0000' --v3 --format hex
 module.exports = {
   theme: {
     extend: {
@@ -114,5 +116,5 @@ bun test               # test suite (single seam: the CLI entry, in-process)
 bun run typecheck      # tsc --noEmit
 bun run lint           # oxlint
 bun run fmt            # oxfmt
-bun run start '#ff0000'
+bun run start palette '#ff0000'
 ```
