@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "tailshade",
+      "name": "@sethyrung/tailwind_tools",
       "dependencies": {
         "culori": "^4.0.2",
       },
